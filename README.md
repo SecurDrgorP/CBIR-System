@@ -94,6 +94,56 @@ To use this CBIR system:
 3. **Feature Extraction**: Extract visual features from detected objects
 4. **Similarity Search**: Find similar objects based on visual content
 
+## Docker & Local Development 🔧
+
+This project includes Dockerfiles for the **frontend** (Vite + nginx) and **backend** (Flask) and a `docker-compose.yml` to run both services together.
+
+### Prerequisites
+- Install Docker and Docker Compose
+- Enable BuildKit for faster, cacheable builds (recommended)
+
+Export BuildKit on Linux/macOS:
+
+```
+export DOCKER_BUILDKIT=1
+```
+
+### Build & run (recommended)
+
+Build and start both services (shows logs):
+
+```
+DOCKER_BUILDKIT=1 docker-compose up --build
+```
+
+Start detached:
+
+```
+DOCKER_BUILDKIT=1 docker-compose up -d --build
+```
+
+Check services:
+
+- Frontend: http://localhost:3000
+- Backend health: http://localhost:5000/api/health
+
+### Tips to reduce build time and image size ⚠️
+
+- The `ultralytics` package may pull large GPU/CUDA wheels (PyTorch/NVIDIA) which greatly increase build time and image size. To avoid this in the production API image we:
+   - Pre-install a **CPU-only** PyTorch wheel before installing other requirements (see `backend/Dockerfile`). Example:
+
+   ```dockerfile
+   RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
+   RUN --mount=type=cache,target=/root/.cache/pip \ 
+         pip install --no-cache-dir -r requirements.txt
+   ```
+
+- Use BuildKit cache mount for pip (`--mount=type=cache,target=/root/.cache/pip`) to prevent re-downloading wheels between builds. Build with `DOCKER_BUILDKIT=1` as shown above.
+- Move heavy or dev-only packages to `requirements-dev.txt` and only install them in development images.
+- If you need GPU inference, consider running the model on a separate GPU-enabled container or host, and keep the API container lightweight.
+
+If you'd like, I can run a test build locally (or update the Dockerfile further to split dev/production requirements) — tell me to proceed and I'll run the build and report any issues. ✅
+
 ## ImageNet Resources
 
 - **Official Website**: [https://image-net.org](https://image-net.org)
