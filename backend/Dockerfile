@@ -1,29 +1,27 @@
 FROM python:3.11-slim
+
 WORKDIR /app
 
-# Prevent Python from writing .pyc files and buffering stdout
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 
+ENV PYTHONUNBUFFERED=1
 
-# System deps (opencv and builds)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    gcc \
+    libgl1 \
     libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install
-COPY requirements.txt ./
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir gunicorn
+COPY req-for-docker.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r req-for-docker.txt
 
-# Copy app sources
-COPY . /app
+COPY . .
+
+# Create folders inside image to ensure correct permissions
+RUN mkdir -p /app/uploads /app/database
 
 EXPOSE 5000
 
-# Run with gunicorn in production
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
+# Using python -m gunicorn is more reliable for PATH resolution
+# Increase timeout to 5 minutes (300s) because AI inference is heavy
+CMD ["python", "-m", "gunicorn", "--workers", "1", "--timeout", "300", "--bind", "0.0.0.0:5000", "app:app"]
