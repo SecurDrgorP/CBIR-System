@@ -54,7 +54,7 @@ The project is built with a production-first Docker architecture:
 
 <p align="center">
   <b>Shape-based Retrieval Example</b><br>
-  <img src="demo/images/sys-arch.png" width="600" alt="Shape-based Retrieval"><br><br>
+  <img src="docs/images/sys-arch.png" width="600" alt="Shape-based Retrieval"><br><br>
 </p>
 
 ### Key Optimizations:
